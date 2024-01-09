@@ -2,12 +2,11 @@ numpy
 tqdm
 pandas
 matplotlib
-tifffile
-scipy
-skimage
 pyvista
 quantimpy
 porespy
 trimesh
 connected-components-3d==1.0.0
 ipywidgets
+python>=3.11
+notebook

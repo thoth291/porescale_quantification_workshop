@@ -12,11 +12,14 @@ from copy import deepcopy
 import scipy
 import os
 import cc3d
-os.chdir('C:/Users/cinar/Desktop/Github/dpm_tools')
-from dpm_tools.io import Image, Vector, ImageFromFile, read_image
-from dpm_tools.visualization.plot_2d import hist, plot_slice, make_gif
-from dpm_tools.visualization.plot_3d import orthogonal_slices, plot_isosurface, plot_streamlines
-from dpm_tools.visualization.plot_3d import plot_glyph, bounding_box
+import tifffile
+os.chdir('../')
+from src.vis_utils import plot_isosurface, orthogonal_slices
+# os.chdir('C:/Users/cinar/Desktop/Github/dpm_tools')
+# from dpm_tools.io import Image, Vector, ImageFromFile, read_image
+# from dpm_tools.visualization.plot_2d import hist, plot_slice, make_gif
+# from dpm_tools.visualization.plot_3d import orthogonal_slices, plot_isosurface, plot_streamlines
+# from dpm_tools.visualization.plot_3d import plot_glyph, bounding_box
 
 # Main Function
 def find_porosity_visualization_interval(data, cube_size = 100, batch=100):
@@ -119,104 +122,111 @@ def find_porosity_visualization_interval(data, cube_size = 100, batch=100):
 
 # Loading the datasets and visualizing them in 2D:
     
-os.chdir('C:/Users/cinar/Desktop/Research_Cinar_Offline/DRP Related/Codes/DPM Tutorial Data')
-segmented_lrc32 = np.fromfile('segmented_lrc32_512.ubc', dtype='uint8')
-segmented_lrc32 = segmented_lrc32.reshape((512,512,512))
-segmented_lrc32_Image_256 = Image(segmented_lrc32[0:256,0:256,0:256])
+# os.chdir('C:/Users/cinar/Desktop/Research_Cinar_Offline/DRP Related/Codes/DPM Tutorial Data')
 
-segmented_Gambier = np.fromfile('segmented_Gambier_512.ubc', dtype='uint8')
-segmented_Gambier = segmented_Gambier.reshape((512,512,512))
-segmented_Gambier_Image_256 = Image(segmented_Gambier[0:256,0:256,0:256])
+# TODO: Do we want to run these on the entire 512? or just the 256?
+segmented_lrc32 = tifffile.imread('data/sandpack.tif')
+segmented_Gambier = tifffile.imread('data/mtgambier.tif')
+segmented_bead_pack_512= tifffile.imread('data/beadpack.tif')
+segmented_castle_512 = tifffile.imread('data/castlegate.tif')
+# segmented_lrc32 = np.fromfile('segmented_lrc32_512.ubc', dtype='uint8')
+# segmented_lrc32 = segmented_lrc32.reshape((512,512,512))
+segmented_lrc32_Image_256 = segmented_lrc32[0:256, 0:256, 0:256]
+#
+# segmented_Gambier = np.fromfile('segmented_Gambier_512.ubc', dtype='uint8')
+# segmented_Gambier = segmented_Gambier.reshape((512,512,512))
+segmented_Gambier_Image_256 = segmented_Gambier[0:256, 0:256, 0:256]
+#
+# segmented_bead_pack_512 = np.fromfile('segmented_bead_pack_512.ubc', dtype='uint8')
+# segmented_bead_pack_512 = segmented_bead_pack_512.reshape((512,512,512))
+segmented_bead_pack_512_Image_256 = segmented_bead_pack_512[0:256, 0:256, 0:256]
+#
+# segmented_castle_512 = np.fromfile('segmented_castle_512.ubc', dtype='uint8')
+# segmented_castle_512 = segmented_castle_512.reshape((512,512,512))
+segmented_castle_512_Image_256 = segmented_castle_512[0:256, 0:256, 0:256]
 
-segmented_bead_pack_512 = np.fromfile('segmented_bead_pack_512.ubc', dtype='uint8')
-segmented_bead_pack_512 = segmented_bead_pack_512.reshape((512,512,512))
-segmented_bead_pack_512_Image_256 = Image(segmented_bead_pack_512[0:256,0:256,0:256])
+# fig, ax = plt.subplots(nrows=2, ncols=2,figsize=(8,8))
+# ax = ax.flatten()
+#
+# skimage.io.imshow(segmented_lrc32[0,:,:], cmap='gray', ax=ax[0])
+# ax[0].set_title('LRC32 Sand Pack',fontsize=14)
+#
+# skimage.io.imshow(segmented_Gambier[0,:,:], cmap='gray', ax=ax[1])
+# ax[1].set_title('Gambier Limestone',fontsize=14)
+#
+# skimage.io.imshow(segmented_bead_pack_512[0,:,:], cmap='gray', ax=ax[2])
+# ax[2].set_title('Glass Bead Pack',fontsize=14)
+#
+# skimage.io.imshow(segmented_castle_512[0,:,:], cmap='gray', ax=ax[3])
+# ax[3].set_title('Castlegate Sandstone',fontsize=14)
+#
+# plt.show()
 
-segmented_castle_512 = np.fromfile('segmented_castle_512.ubc', dtype='uint8')
-segmented_castle_512 = segmented_castle_512.reshape((512,512,512))
-segmented_castle_512_Image_256 = Image(segmented_castle_512[0:256,0:256,0:256])
-
-fig, ax = plt.subplots(nrows=2, ncols=2,figsize=(8,8))
-ax = ax.flatten()
-
-skimage.io.imshow(segmented_lrc32[0,:,:], cmap='gray', ax=ax[0])
-ax[0].set_title('LRC32 Sand Pack',fontsize=14)
-
-skimage.io.imshow(segmented_Gambier[0,:,:], cmap='gray', ax=ax[1])
-ax[1].set_title('Gambier Limestone',fontsize=14)
-
-skimage.io.imshow(segmented_bead_pack_512[0,:,:], cmap='gray', ax=ax[2])
-ax[2].set_title('Glass Bead Pack',fontsize=14)
-
-skimage.io.imshow(segmented_castle_512[0,:,:], cmap='gray', ax=ax[3])
-ax[3].set_title('Castlegate Sandstone',fontsize=14)
-
-plt.show()
-
-# Visualizing them in 3D:
-    
-fig_contours = plot_isosurface(segmented_lrc32_Image_256,show_isosurface=[0.5])
-fig_contours.show()
-
-fig_contours = plot_isosurface(segmented_Gambier_Image_256,show_isosurface=[0.5])
-fig_contours.show()
-
-fig_contours = plot_isosurface(segmented_bead_pack_512_Image_256,show_isosurface=[0.5])
-fig_contours.show()
-
-fig_contours = plot_isosurface(segmented_castle_512_Image_256,show_isosurface=[0.5])
-fig_contours.show()
-
-fig_orthogonal = orthogonal_slices(segmented_lrc32_Image_256,slider=True)
-fig_orthogonal.show()
-
-fig_orthogonal = orthogonal_slices(segmented_Gambier_Image_256,slider=True)
-fig_orthogonal.show()
-
-fig_orthogonal = orthogonal_slices(segmented_bead_pack_512_Image_256,slider=True)
-fig_orthogonal.show()
-
-fig_orthogonal = orthogonal_slices(segmented_castle_512_Image_256,slider=True)
-fig_orthogonal.show()
+# # Visualizing them in 3D:
+#
+# fig_contours = plot_isosurface(segmented_lrc32_Image_256,show_isosurface=[0.5])
+# fig_contours.show()
+#
+# fig_contours = plot_isosurface(segmented_Gambier_Image_256,show_isosurface=[0.5])
+# fig_contours.show()
+#
+# fig_contours = plot_isosurface(segmented_bead_pack_512_Image_256,show_isosurface=[0.5])
+# fig_contours.show()
+#
+# fig_contours = plot_isosurface(segmented_castle_512_Image_256,show_isosurface=[0.5])
+# fig_contours.show()
+#
+# fig_orthogonal = orthogonal_slices(segmented_lrc32_Image_256,slider=True)
+# fig_orthogonal.show()
+#
+# fig_orthogonal = orthogonal_slices(segmented_Gambier_Image_256,slider=True)
+# fig_orthogonal.show()
+#
+# fig_orthogonal = orthogonal_slices(segmented_bead_pack_512_Image_256,slider=True)
+# fig_orthogonal.show()
+#
+# fig_orthogonal = orthogonal_slices(segmented_castle_512_Image_256,slider=True)
+# fig_orthogonal.show()
 ##############################################################
 
 # Finding the competent intervals
-interval1, _ = find_porosity_visualization_interval(segmented_lrc32, cube_size = 256, batch=100)
-interval2, _ = find_porosity_visualization_interval(segmented_Gambier, cube_size = 256, batch=100)
-interval3, _ = find_porosity_visualization_interval(segmented_bead_pack_512, cube_size = 256, batch=100)
-interval4, _ = find_porosity_visualization_interval(segmented_castle_512, cube_size = 256, batch=100)
+interval1, _ = find_porosity_visualization_interval(segmented_lrc32, cube_size=256, batch=100)
+interval2, _ = find_porosity_visualization_interval(segmented_Gambier, cube_size=256, batch=100)
+interval3, _ = find_porosity_visualization_interval(segmented_bead_pack_512, cube_size=256, batch=100)
+interval4, _ = find_porosity_visualization_interval(segmented_castle_512, cube_size=256, batch=100)
 
 ##############################################################
 
 # Selecting and 3D visualizing the intervals
 
-segmented_lrc32_Image_competent = Image(segmented_lrc32[109:365,109:365,109:365])
-segmented_Gambier_Image_competent = Image(segmented_Gambier[33:289,33:289,33:289])
-segmented_bead_pack_512_Image_competent = Image(segmented_bead_pack_512[111:367,111:367,111:367])
-segmented_castle_512_Image_competent = Image(segmented_castle_512[170:426,170:426,170:426])
+segmented_lrc32_Image_competent = segmented_lrc32[109:365, 109:365, 109:365]
+segmented_Gambier_Image_competent = segmented_Gambier[33:289, 33:289, 33:289]
+segmented_bead_pack_512_Image_competent = segmented_bead_pack_512[111:367, 111:367, 111:367]
+segmented_castle_512_Image_competent = segmented_castle_512[170:426, 170:426, 170:426]
 
-fig_contours = plot_isosurface(segmented_lrc32_Image_256,show_isosurface=[0.5])
+# TODO: Should these be plotting the competent subsets?
+fig_contours = plot_isosurface(segmented_lrc32_Image_256, show_isosurface=[0.5])
 fig_contours.show()
 
-fig_contours = plot_isosurface(segmented_Gambier_Image_256,show_isosurface=[0.5])
+fig_contours = plot_isosurface(segmented_Gambier_Image_256, show_isosurface=[0.5])
 fig_contours.show()
 
-fig_contours = plot_isosurface(segmented_bead_pack_512_Image_256,show_isosurface=[0.5])
+fig_contours = plot_isosurface(segmented_bead_pack_512_Image_256, show_isosurface=[0.5])
 fig_contours.show()
 
-fig_contours = plot_isosurface(segmented_castle_512_Image_256,show_isosurface=[0.5])
+fig_contours = plot_isosurface(segmented_castle_512_Image_256, show_isosurface=[0.5])
 fig_contours.show()
 
-fig_orthogonal = orthogonal_slices(segmented_lrc32_Image_256,slider=True)
+fig_orthogonal = orthogonal_slices(segmented_lrc32_Image_256, slider=True)
 fig_orthogonal.show()
 
-fig_orthogonal = orthogonal_slices(segmented_Gambier_Image_256,slider=True)
+fig_orthogonal = orthogonal_slices(segmented_Gambier_Image_256, slider=True)
 fig_orthogonal.show()
 
-fig_orthogonal = orthogonal_slices(segmented_bead_pack_512_Image_256,slider=True)
+fig_orthogonal = orthogonal_slices(segmented_bead_pack_512_Image_256, slider=True)
 fig_orthogonal.show()
 
-fig_orthogonal = orthogonal_slices(segmented_castle_512_Image_256,slider=True)
+fig_orthogonal = orthogonal_slices(segmented_castle_512_Image_256, slider=True)
 fig_orthogonal.show()
 ##############################################################
 
@@ -226,21 +236,21 @@ fig_orthogonal.show()
 
 
 # Randomly selecting a subset:
-segmented_Gambier_Image_128 = Image(segmented_Gambier[128:256,128:256,128:256])
-porosity = np.sum(segmented_Gambier_Image_128.image == 0)/(128**3)*100
-print(round(porosity,1),'%')
+segmented_Gambier_Image_128 = segmented_Gambier[128:256, 128:256, 128:256]
+porosity = np.sum(segmented_Gambier_Image_128 == 0)/(128**3)*100
+print(round(porosity, 1), '%')
 
-fig_contours = plot_isosurface(segmented_Gambier_Image_128,show_isosurface=[0.5])
+fig_contours = plot_isosurface(segmented_Gambier_Image_128, show_isosurface=[0.5])
 fig_contours.show()
 
-fig_orthogonal = orthogonal_slices(segmented_Gambier_Image_128,slider=True)
+fig_orthogonal = orthogonal_slices(segmented_Gambier_Image_128, slider=True)
 fig_orthogonal.show()
 
 
 # Finding a competent subset:
-interval, _ = find_porosity_visualization_interval(segmented_Gambier, cube_size = 128, batch=300)
+interval, _ = find_porosity_visualization_interval(segmented_Gambier, cube_size=128, batch=300)
 
-segmented_Gambier_Image_competent_128 = Image(segmented_Gambier[51:179,51:179,51:179])
+segmented_Gambier_Image_competent_128 = segmented_Gambier[51:179, 51:179, 51:179]
 
 
 fig_contours = plot_isosurface(segmented_Gambier_Image_competent_128,show_isosurface=[0.5])
