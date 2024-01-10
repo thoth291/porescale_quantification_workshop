@@ -50,3 +50,30 @@ def get_datafiles(datapath='data'):
             # Remove the ubc file. Only keep the tiff file
             runcmd(f"rm -f {datapath}/{row[0]}.ubc")
 
+
+def read_tiff(datapath: str) -> np.ndarray:
+    """
+    Reads a 3D numpy array from a tif file at the given filepath.
+    :param datapath: The filepath of the tif file to read.
+    :returns: np.ndarray: A 3D numpy array containing the data from the tif file.
+    :raises: ValueError: If the given filepath does not point to a valid tif file.
+    """
+
+    if not os.path.exists(datapath):
+        raise ValueError(f"File {datapath} does not exist.")
+
+    extension = os.path.splitext(datapath)[1]
+    if not (extension == ".tif" or extension == ".tiff"):
+        raise ValueError(f"File {datapath} is not a tif file.")
+
+    return tifffile.imread(datapath)
+
+def write_csv(name, results):
+    """
+    Write a csv file containing the results of the analysis
+    :name: Name of csv file
+    :results: Results of the analysis to write to file
+    :return: None
+    """
+
+
