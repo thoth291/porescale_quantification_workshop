@@ -212,7 +212,7 @@ class Vsi():
         self.radii = var[1]
         
     def result(self):
-        return pd.DataFrame({'Radii':self.radii, 'Variance':self.variance})
+        return pd.DataFrame({'Radii': [self.radii], 'Variance': [self.variance]})
     def rock_type(self):
         return rock_type(self.variance)
     def plot(self, label=None, 

@@ -4,6 +4,7 @@ import tifffile
 import csv
 import os
 import pandas as pd
+import wget
 
 def runcmd(cmd, verbose = True, *args, **kwargs):
 
@@ -26,7 +27,8 @@ def download_file(url, filename):
     :param filename: Downloaded file name
     :return: None
     """
-    runcmd(f'wget -O {filename}.ubc {url}')
+    wget.download(url, out=f"{filename}.ubc")
+    # runcmd(f'wget -O {filename}.ubc {url}')
 
 def get_datafiles(datapath='data'):
     """
@@ -73,23 +75,14 @@ def read_tiff(datapath: str) -> np.ndarray:
 def create_results_directory(directory_path: str = '.'):
     """
     Create a new results directory
-    :param directory_path: Path in which a directory named 'image_characterization_results' and its subdirectories should be created.
+    :param directory_path: Path in which a directory named 'image_characterization_results'
     :return: None
     """
     # Create a parent results directory if it does not already exist at the specified path
     os.makedirs(os.path.join(directory_path, 'image_characterization_results'), exist_ok=True)
 
-    # # Create a Minkowski results subdirectory if it does not already exist at the specified path
-    # os.makedirs(os.path.join(directory_path, 'image_characterization_results', 'minkowski'), exist_ok=True)
-    #
-    # # Create a heterogeneity results subdirectory if it does not already exist at the specified path
-    # os.makedirs(os.path.join(directory_path, 'image_characterization_results', 'heterogeneity'), exist_ok=True)
-    #
-    # # Create a competent subset results subdirectory if it does not already exist at the specified path
-    # os.makedirs(os.path.join(directory_path, 'image_characterization_results', 'subsets'), exist_ok=True)
 
-
-def write_results(results_df: pd.DataFrame, results_type: str,  directory_path: str = '.', filetype: str = 'pickle') -> None:
+def write_results(results_df: pd.DataFrame, results_type: str,  directory_path: str = '.', filetype: str = 'csv', **kwargs) -> None:
     """
     Write a csv file containing the results of the analysis
     :results_dict: Dictionary containing the results of the analysis
@@ -107,17 +100,30 @@ def write_results(results_df: pd.DataFrame, results_type: str,  directory_path: 
     assert filetype in ['parquet', 'csv', 'pickle', 'feather', 'json'], \
         "Filetype must be 'parquet', 'csv', 'pickle', 'feather', 'json'"
 
-    filetype_dict = {'parquet': results_df.to_parquet,
-                     'csv': results_df.to_csv,
-                     'feather': results_df.to_feather,
-                     'pickle': results_df.to_pickle,
-                     'json': results_df.to_json}
+    filetype_dict = {'parquet': {'write': results_df.to_parquet, 'read': pd.read_parquet},
+                     'csv': {'write': results_df.to_csv, 'read': pd.read_csv},
+                     'feather': {'write': results_df.to_feather, 'read': pd.read_feather},
+                     'pickle': {'write': results_df.to_pickle, 'read': pd.read_pickle},
+                     'json': {'write': results_df.to_json, 'read': pd.read_json}}
 
     # First create the results directory structure
     create_results_directory(directory_path)
 
-    # Write the results to a csv file
-    filetype_dict[filetype](os.path.join(directory_path, "image_characterization_results", f"{results_type}.{filetype}"))
+    path_tmp = os.path.join(directory_path, "image_characterization_results", f"{results_type}.{filetype}")
+    print(path_tmp)
+    # Check if the results file already exists
+    if os.path.exists(path_tmp):
+        # If so, read the results file, append a row and write it back out
+        df_tmp = filetype_dict[filetype]['read'](path_tmp)
+        print(df_tmp.head())
+        results_df = pd.concat([df_tmp, results_df.copy()], ignore_index=True)
+    filetype_write_dict = {'parquet': results_df.to_parquet,
+                           'csv': results_df.to_csv,
+                           'feather': results_df.to_feather,
+                           'pickle': results_df.to_pickle,
+                           'json': results_df.to_json}
+    # Write the results to a file
+    filetype_write_dict[filetype](path_tmp, **kwargs)
 
 # if __name__ == '__main__':
 #     np.random.seed(189467)
