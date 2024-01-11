@@ -3,6 +3,7 @@ import numpy as np
 import tifffile
 import csv
 import os
+import pandas as pd
 
 def runcmd(cmd, verbose = True, *args, **kwargs):
 
@@ -68,12 +69,68 @@ def read_tiff(datapath: str) -> np.ndarray:
 
     return tifffile.imread(datapath)
 
-def write_csv(name, results):
+
+def create_results_directory(directory_path: str = '.'):
+    """
+    Create a new results directory
+    :param directory_path: Path in which a directory named 'image_characterization_results' and its subdirectories should be created.
+    :return: None
+    """
+    # Create a parent results directory if it does not already exist at the specified path
+    os.makedirs(os.path.join(directory_path, 'image_characterization_results'), exist_ok=True)
+
+    # # Create a Minkowski results subdirectory if it does not already exist at the specified path
+    # os.makedirs(os.path.join(directory_path, 'image_characterization_results', 'minkowski'), exist_ok=True)
+    #
+    # # Create a heterogeneity results subdirectory if it does not already exist at the specified path
+    # os.makedirs(os.path.join(directory_path, 'image_characterization_results', 'heterogeneity'), exist_ok=True)
+    #
+    # # Create a competent subset results subdirectory if it does not already exist at the specified path
+    # os.makedirs(os.path.join(directory_path, 'image_characterization_results', 'subsets'), exist_ok=True)
+
+
+def write_results(results_df: pd.DataFrame, results_type: str,  directory_path: str = '.', filetype: str = 'pickle') -> None:
     """
     Write a csv file containing the results of the analysis
-    :name: Name of csv file
-    :results: Results of the analysis to write to file
+    :results_dict: Dictionary containing the results of the analysis
+    :results_type: Type of the analysis. Options are 'minkowski', 'heterogeneity', and 'subsets'
+    :data_name: Filename of the data. This will be used as the filename of the csv file (<data_name>.csv)
+    :filetype: Type of the file to write. Options are 'parquet', 'csv', 'pickle', 'feather'. Default is
     :return: None
     """
 
+    # Check that results_type is valid
+    assert results_type.lower() in ['minkowski', 'heterogeneity', 'subsets'], \
+        "Results type must be 'minkowski', 'heterogeneity', or 'subsets'"
+
+    filetype = filetype.lower()
+    assert filetype in ['parquet', 'csv', 'pickle', 'feather', 'json'], \
+        "Filetype must be 'parquet', 'csv', 'pickle', 'feather', 'json'"
+
+    filetype_dict = {'parquet': results_df.to_parquet,
+                     'csv': results_df.to_csv,
+                     'feather': results_df.to_feather,
+                     'pickle': results_df.to_pickle,
+                     'json': results_df.to_json}
+
+    # First create the results directory structure
+    create_results_directory(directory_path)
+
+    # Write the results to a csv file
+    filetype_dict[filetype](os.path.join(directory_path, "image_characterization_results", f"{results_type}.{filetype}"))
+
+# if __name__ == '__main__':
+#     np.random.seed(189467)
+#     df = pd.DataFrame()
+#     size = 50000
+#     df['Name'] = np.arange(size)
+#     df['Volume'] = np.random.uniform(0, 1, size)
+#     df['Surface Area'] = np.random.uniform(0, 100000, size)
+#     df['Mean Curvature'] = np.random.uniform(-100000, 100000, size)
+#     df['Euler Number'] = np.random.randint(-10000, 0, size)
+#
+#     ft = 'pickle'
+#     write_results(df, 'minkowski', filetype=ft)
+#     df_test = pd.read_pickle(os.path.join('.', "image_characterization_results", f"minkowski.{ft}"))
+#     print(df_test.head())
 
