@@ -100,23 +100,26 @@ def write_results(results_df: pd.DataFrame, results_type: str,  directory_path: 
     assert filetype in ['parquet', 'csv', 'pickle', 'feather', 'json'], \
         "Filetype must be 'parquet', 'csv', 'pickle', 'feather', 'json'"
 
-    filetype_dict = {'parquet': {'write': results_df.to_parquet, 'read': pd.read_parquet},
-                     'csv': {'write': results_df.to_csv, 'read': pd.read_csv},
-                     'feather': {'write': results_df.to_feather, 'read': pd.read_feather},
-                     'pickle': {'write': results_df.to_pickle, 'read': pd.read_pickle},
-                     'json': {'write': results_df.to_json, 'read': pd.read_json}}
+    read_filetype_dict = {'parquet': pd.read_parquet,
+                          'csv': pd.read_csv,
+                          'feather': pd.read_feather,
+                          'pickle': pd.read_pickle,
+                          'json': pd.read_json}
 
     # First create the results directory structure
     create_results_directory(directory_path)
 
     path_tmp = os.path.join(directory_path, "image_characterization_results", f"{results_type}.{filetype}")
-    print(path_tmp)
     # Check if the results file already exists
+    # TODO: Should we use actual append functions? Should we rethink our algorithm for writing these files?
     if os.path.exists(path_tmp):
         # If so, read the results file, append a row and write it back out
-        df_tmp = filetype_dict[filetype]['read'](path_tmp)
-        print(df_tmp.head())
+        df_tmp = read_filetype_dict[filetype](path_tmp)
+        # Concatenate the results dataframe with the existing dataframe
         results_df = pd.concat([df_tmp, results_df.copy()], ignore_index=True)
+        # Drop any rows with duplicated data names. keep only the last occurrence (assuming to be most recently added)
+        results_df = results_df.drop_duplicates(subset=['Name'], keep='last', ignore_index=True)
+
     filetype_write_dict = {'parquet': results_df.to_parquet,
                            'csv': results_df.to_csv,
                            'feather': results_df.to_feather,
@@ -124,19 +127,4 @@ def write_results(results_df: pd.DataFrame, results_type: str,  directory_path: 
                            'json': results_df.to_json}
     # Write the results to a file
     filetype_write_dict[filetype](path_tmp, **kwargs)
-
-# if __name__ == '__main__':
-#     np.random.seed(189467)
-#     df = pd.DataFrame()
-#     size = 50000
-#     df['Name'] = np.arange(size)
-#     df['Volume'] = np.random.uniform(0, 1, size)
-#     df['Surface Area'] = np.random.uniform(0, 100000, size)
-#     df['Mean Curvature'] = np.random.uniform(-100000, 100000, size)
-#     df['Euler Number'] = np.random.randint(-10000, 0, size)
-#
-#     ft = 'pickle'
-#     write_results(df, 'minkowski', filetype=ft)
-#     df_test = pd.read_pickle(os.path.join('.', "image_characterization_results", f"minkowski.{ft}"))
-#     print(df_test.head())
 

@@ -36,15 +36,15 @@ class ImageQuantifier:
 
     def run_analysis(self, heterogeneity_kwargs={}, ev_kwargs={}, write_results=True, save_path=None, to_file_kwargs={}):
         mf = self.get_quantimpy_mf()
-        # vf = self.heterogeneity_analysis(**heterogeneity_kwargs)
-        # interval = self.find_porosity_visualization_interval(**ev_kwargs)
+        vf = self.heterogeneity_analysis(**heterogeneity_kwargs)
+        interval = self.find_porosity_visualization_interval(**ev_kwargs)
 
         if save_path is None:
             save_path = os.path.dirname(self.datapath)
         if write_results:
             utils.write_results(mf, 'minkowski', directory_path=save_path, **to_file_kwargs)
-            # utils.write_results(vf, 'heterogeneity', directory_path=save_path, **to_file_kwargs)
-            # utils.write_results(interval, 'subsets', directory_path=save_path, **to_file_kwargs)
+            utils.write_results(vf, 'heterogeneity', directory_path=save_path, **to_file_kwargs)
+            utils.write_results(interval, 'subsets', directory_path=save_path, **to_file_kwargs)
 
 
     def get_quantimpy_mf(self):
@@ -74,9 +74,12 @@ class ImageQuantifier:
         ds = dst(self.image)
         mn_r = ds.max()  # maximum width of pores is used as minimum radius for moving windows
         mx_r = mn_r + 100
-        vf_df = Vsi(self.image,
-                 min_radius=mn_r, max_radius=mx_r, **kwargs).result()
+        vf = Vsi(self.image,
+                 min_radius=mn_r, max_radius=mx_r, **kwargs)
+        vf_df = vf.result()
+        heterogeneity_ratio = vf.rock_type()
         vf_df.insert(0, 'Name', self.image_name, allow_duplicates=True)
+        vf_df.insert(3, 'Heterogeneity Ratio', heterogeneity_ratio, allow_duplicates=True)
 
         return vf_df
 

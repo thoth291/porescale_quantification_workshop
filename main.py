@@ -7,17 +7,17 @@ if __name__ == "__main__":
     # Download the data files
     # utils.get_datafiles()
     # import os
-    for image in ['beadpack', 'castlegate', 'mtgambier', 'sandpack']:
+    for image in ['beadpack', 'castlegate', 'mtgambier', 'sandpack', 'beadpack']:
         # Check a slice of the image
         img = ImageQuantifier(f"data/{image}.tif")
         # img.plot_slice()
         img.run_analysis(heterogeneity_kwargs={'no_radii': 20, 'no_samples_per_radius': 500}, ev_kwargs={'cube_size': 256},
                          to_file_kwargs={'filetype': 'parquet'})
-        #
+
     minkowski = pd.read_parquet("data/image_characterization_results/minkowski.parquet")
-    # hetero = pd.read_parquet("data/image_characterization_results/heterogeneity.parquet")
-    # subset = pd.read_parquet("data/image_characterization_results/subsets.parquet")
-        #
+    hetero = pd.read_parquet("data/image_characterization_results/heterogeneity.parquet")
+    subset = pd.read_parquet("data/image_characterization_results/subsets.parquet")
+
     print(minkowski)
-    # print(hetero.head())
-    # print(subset.head())
+    print(hetero.head())
+    print(subset.head())
