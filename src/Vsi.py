@@ -160,7 +160,7 @@ def rock_type(v):
     wts = vv/vv.sum()
     
     r = wts*(v>bound)
-    return 'Heterogeneity ratio is {0:.0f} %'.format(100*(r.sum()))
+    return 'Heterogeneity coeffecient is {0:.2f} '.format((r.sum()))
 
 def read_image(path_to_tif, pore_phase=0):
     """
@@ -211,6 +211,10 @@ class Vsi():
         self.variance = var[0]
         self.radii = var[1]
         
+    def result(self):
+        return pd.DataFrame({'Radii':self.radii, 'Variance':self.variance})
+    def rock_type(self):
+        return rock_type(self.variance)
     def plot(self, label=None, 
              x_label='relative radius', y_label='Porosity Variance',
              fill=True, fill_all=False,legend=True, local = False):
