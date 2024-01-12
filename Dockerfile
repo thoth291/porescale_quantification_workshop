@@ -5,6 +5,7 @@ USER root
 RUN apt-get update && apt-get install -y build-essential
 RUN apt-get install -y libopencv-dev
 #RUN apt-get install -y libegl1
+RUN apt-get install -qq xvfb
 
 #~data folder was not writable (set to be writable only by `root`)
 COPY . ${HOME}
