@@ -1,7 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use('TkAgg')
 from copy import deepcopy
 import cc3d
 import scipy

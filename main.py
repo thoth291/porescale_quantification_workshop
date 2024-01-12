@@ -6,8 +6,8 @@ import pandas as pd
 if __name__ == "__main__":
     # Download the data files
     # utils.get_datafiles()
-    # import os
-    for image in ['beadpack', 'castlegate', 'mtgambier', 'sandpack', 'beadpack']:
+
+    for image in ['beadpack', 'castlegate', 'mtgambier', 'sandpack']:
         # Check a slice of the image
         img = ImageQuantifier(f"data/{image}.tif")
         # img.plot_slice()
