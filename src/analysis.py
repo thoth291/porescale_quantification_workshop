@@ -1,11 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('TkAgg')
 from copy import deepcopy
 import cc3d
 import scipy
 from src import utils
-import tifffile
-import tqdm
+import os
+import pandas as pd
 
 # Morphology/Topology analysis packages
 from quantimpy import minkowski as mk
@@ -17,7 +19,9 @@ from scipy.ndimage import distance_transform_edt as dst
 
 class ImageQuantifier:
     def __init__(self, datapath):
-        self.image = utils.read_tiff(datapath)
+        self.datapath = datapath
+        self.image = utils.read_tiff(self.datapath)
+        self.image_name = os.path.splitext(os.path.basename(self.datapath))[0]
 
     def plot_slice(self, slice_num=None):
 
@@ -29,26 +33,37 @@ class ImageQuantifier:
         plt.colorbar()
         plt.tight_layout()
         plt.show()
-    def run_analysis(self, heterogeneity_kwargs={}, ev_kwargs={}):
+
+    def run_analysis(self, heterogeneity_kwargs={}, ev_kwargs={}, write_results=True, save_path=None, to_file_kwargs={}):
         mf = self.get_quantimpy_mf()
         vf = self.heterogeneity_analysis(**heterogeneity_kwargs)
-        interval, stats = self.find_porosity_visualization_interval(**ev_kwargs)
-        print(mf)
-        print(vf)
-        print(interval, stats)
-        # TODO: Write to a file
+        interval = self.find_porosity_visualization_interval(**ev_kwargs)
+
+        if save_path is None:
+            save_path = os.path.dirname(self.datapath)
+        if write_results:
+            utils.write_results(mf, 'minkowski', directory_path=save_path, **to_file_kwargs)
+            utils.write_results(vf, 'heterogeneity', directory_path=save_path, **to_file_kwargs)
+            utils.write_results(interval, 'subsets', directory_path=save_path, **to_file_kwargs)
 
 
     def get_quantimpy_mf(self):
         """
         Returns the Minkowski functionals measured by the Quantimpy library.
-        :return: List of Minkowski functionals (Volume, Surface Area, Integral Mean Curvature, Euler Characteristic)
+        :return: Dataframe  of Minkowski functionals (Volume, Surface Area, Integral Mean Curvature, Euler Characteristic)
         """
         mf0, mf1, mf2, mf3 = mk.functionals(self.image.astype(bool))
         mf1 *= 8
         mf2 *= 2*np.pi**2
         mf3 *= 4*np.pi/3
-        return mf0, mf1, mf2, mf3
+
+        mf_df = pd.DataFrame({'Name': [self.image_name],
+                              'Volume': [mf0],
+                              'Surface Area': [mf1],
+                              'Mean Curvature': [mf2],
+                              'Euler Number': [mf3]})
+
+        return mf_df
 
     def heterogeneity_analysis(self, **kwargs):
         """
@@ -61,8 +76,12 @@ class ImageQuantifier:
         mx_r = mn_r + 100
         vf = Vsi(self.image,
                  min_radius=mn_r, max_radius=mx_r, **kwargs)
+        vf_df = vf.result()
+        heterogeneity_ratio = vf.rock_type()
+        vf_df.insert(0, 'Name', self.image_name, allow_duplicates=True)
+        vf_df.insert(3, 'Heterogeneity Ratio', heterogeneity_ratio, allow_duplicates=True)
 
-        return vf
+        return vf_df
 
     def find_porosity_visualization_interval(self, cube_size=100, batch=100, **kwargs):
         """
@@ -149,4 +168,8 @@ class ImageQuantifier:
 
         best_interval = (int(best_interval), int(best_interval + cube_size))
 
-        return best_interval, stats_array
+        subset_df = pd.DataFrame({'Name': [self.image_name],
+                                  'subset_start': [best_interval[0]],
+                                  'subset_end': [best_interval[1]]})
+
+        return subset_df
