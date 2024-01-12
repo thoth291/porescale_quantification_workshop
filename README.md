@@ -1,3 +1,5 @@
+[![Binder](http://mybinder.org/badge_logo.svg)](http://mybinder.org/v2/gh/thoth291/porescale_quantification_workshop/HEAD)
+
 # Porescale Images Quantification Workshop
 
 Files and scripts for the Jan. 12, 2024 Digital Porous Media (DPM) Industrial Affiliates Program (IAP) workshop on some quantifications of pore scale images.  
